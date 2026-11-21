@@ -83,14 +83,6 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
 
-  // ---- hier kommt deine Ergaenzung hin ----
-  // schwarzer Taster: schneller blinken, interval wird kleiner
-  // roter Taster:     langsamer blinken, interval wird groesser
-  // Denk an eine Untergrenze und eine Obergrenze.
-  //
-  // Zusatz: Am langsamen Ende soll das Blinken ganz aufhoeren,
-  // und der schwarze Taster soll es wieder starten.
-
   bool schw = !digitalRead(PIN_SCHW);
   bool rot  = !digitalRead(PIN_ROT);
 
