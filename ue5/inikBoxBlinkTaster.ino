@@ -34,7 +34,17 @@ const int PIN_LED  = 7;  // RGB-LED
 Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 unsigned long previousMillis = 0;
-unsigned long interval = 300;   // Millisekunden je Phase
+//config for variable flashing | all values need to be positive and upperBound > interval > lowerBound althought interval can = either  | if (upperbound - stepSize) < lowerBound stepSize needs to be increased | upperBound and lowerBound and interval should be multiples of stepSize | (upperBound + stepSize) < unsigned long max  | all these checks are not in code cause you are modifying them here this is no normal user input
+unsigned long interval = 300;   // default pause value
+unsigned long upperBound = 1000; // max allowed value incl
+unsigned long lowerBound = 100; // smallest allwoed value incl
+unsigned long stepSize = 100; // step size
+//-----
+static bool prevSchw = false;
+static bool prevRot  = false;
+static unsigned long lastButtonMillis = 0;
+const unsigned long debounceMillis = 100;
+
 bool ledState = false;          // leuchtet die LED gerade?
 int  farbe = 0;                 // 0 rot, 1 gruen, 2 blau
 
@@ -81,7 +91,24 @@ void loop() {
   // Zusatz: Am langsamen Ende soll das Blinken ganz aufhoeren,
   // und der schwarze Taster soll es wieder starten.
 
-  if (currentMillis - previousMillis >= interval) {
+  bool schw = !digitalRead(PIN_SCHW);
+  bool rot  = !digitalRead(PIN_ROT);
+
+  if (((currentMillis - lastButtonMillis) >= debounceMillis) && (schw != rot)) { // force only one button at a time without privileging either
+    if (schw && !prevSchw) {
+      if (interval >= (lowerBound + stepSize)) {interval -= stepSize;}
+      lastButtonMillis = currentMillis;
+    }
+    if (rot && !prevRot) {
+      if (interval <= upperBound) {interval += stepSize;}
+      lastButtonMillis = currentMillis;
+    }
+  }
+  prevSchw = schw;
+  prevRot  = rot;
+
+
+  if ((interval <= upperBound) && (currentMillis - previousMillis >= interval)) {
     previousMillis = currentMillis;
 
     ledState = !ledState;
@@ -90,4 +117,6 @@ void loop() {
     }
     zeigeFarbe();
   }
+
+  if (ledState && (interval > upperBound)) {ledState = false; zeigeFarbe();}
 }
